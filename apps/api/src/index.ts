@@ -11,13 +11,33 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-app.get('/', (c) => {
-  return c.text('Hello Hono API!')
-})
+// 啟動檢查旗標，確保該個體(Isolate)只檢查一次環境變數配置
+let isStartupChecked = false
 
-app.get('/version', (c) => {
-  return c.text('0.1.0')
-})
+function performStartupChecks(env: Bindings) {
+  if (isStartupChecked) return
+
+  // 1. 檢查必要的環境變數是否定義 (純記憶體操作，極快)
+  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'] as const
+  for (const key of requiredEnvVars) {
+    if (!env[key]) {
+      console.error(`[Startup Error] Missing environment variable: ${key}`)
+      throw new Error(`Critical environment variable ${key} is missing.`)
+    }
+  }
+
+  isStartupChecked = true
+}
+
+app
+  .use('*', async (c, next) => {
+    performStartupChecks(c.env)
+    await next()
+  })
+
+  .get('/version', (c) => {
+    return c.text('0.1.0')
+  })
 
 // GraphQL Yoga Handler
 const yoga = createYoga<{ request: Request; env: Bindings }, Context>({
@@ -25,7 +45,7 @@ const yoga = createYoga<{ request: Request; env: Bindings }, Context>({
   context: async ({ request, env }) => {
     // 獲取 Database instance (Drizzle)
     const database = createDb(env.DATABASE_URL)
-    
+
     // 從 Header 嘗試獲取 User
     let currentUser = null
     const authHeader = request.headers.get('Authorization')

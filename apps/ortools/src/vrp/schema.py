@@ -7,15 +7,17 @@ class Location(BaseModel):
     name: Optional[str] = None
     lat: float
     lng: float
-    demand: int = 0
+    pickup: int = 0    # 裝貨量（車輛載重增加）
+    delivery: int = 0  # 卸貨量（車輛載重減少）
     service_time: int = 0
     time_window_start: int = 0
-    time_window_end: int = 1440  # 默認為一天的分鐘數
+    time_window_end: int = 1440  # 預設為 1440 分鐘（隔日或更晚亦可填入更大的值）
 
 
 class Vehicle(BaseModel):
     id: int
     capacity: int
+    fixed_cost: int = 0
 
 
 class VRPRequest(BaseModel):
@@ -30,7 +32,6 @@ class VRPRequest(BaseModel):
     time_matrix: list[list[int]]        # 以分鐘為單位的時間矩陣
 
     time_limit_seconds: int = 30
-    fixed_vehicle_cost: int = 0
 
     @field_validator("locations")
     @classmethod

@@ -23,13 +23,15 @@ def solve_vrp(data: VRPRequest) -> dict:
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
     # ── 3. 固定使用成本 ──
-    if data.fixed_vehicle_cost > 0:
-        routing.SetFixedCostOfAllVehicles(data.fixed_vehicle_cost)
+    for i, vehicle in enumerate(data.vehicles):
+        if vehicle.fixed_cost > 0:
+            routing.SetFixedCostOfVehicle(vehicle.fixed_cost, i)
 
     # ── 4. Capacity Dimension ──
     def demand_callback(from_index):
         from_node = manager.IndexToNode(from_index)
-        return data.locations[from_node].demand
+        loc = data.locations[from_node]
+        return loc.pickup - loc.delivery
 
     demand_callback_index = routing.RegisterUnaryTransitCallback(demand_callback)
     vehicle_capacities = [v.capacity for v in data.vehicles]
@@ -38,7 +40,7 @@ def solve_vrp(data: VRPRequest) -> dict:
         demand_callback_index,
         0,
         vehicle_capacities,
-        True,
+        False,  # 不強制從 0 出發，讓 solver 依路線決定初始載重
         "Capacity",
     )
 
@@ -107,7 +109,8 @@ def solve_vrp(data: VRPRequest) -> dict:
 
         stops = []
         route_distance = 0
-        route_load = 0
+        route_pickup = 0
+        route_delivery = 0
 
         while not routing.IsEnd(index):
             node = manager.IndexToNode(index)
@@ -118,12 +121,17 @@ def solve_vrp(data: VRPRequest) -> dict:
                 "location_id": loc.id,
                 "name": loc.name,
                 "arrival_time": solution.Min(time_var),
-                "demand": loc.demand,
+                "pickup": loc.pickup,
+                "delivery": loc.delivery,
             })
 
-            route_load += loc.demand
+            route_pickup += loc.pickup
+            route_delivery += loc.delivery
             next_index = solution.Value(routing.NextVar(index))
-            route_distance += routing.GetArcCostForVehicle(index, next_index, vehicle_id)
+            # 直接查距離矩陣，避免 GetArcCostForVehicle 會將 fixed_cost 計入弧成本
+            from_node = manager.IndexToNode(index)
+            to_node = manager.IndexToNode(next_index)
+            route_distance += data.distance_matrix[from_node][to_node]
             index = next_index
 
         node = manager.IndexToNode(index)
@@ -132,7 +140,8 @@ def solve_vrp(data: VRPRequest) -> dict:
             "location_id": data.locations[node].id,
             "name": data.locations[node].name,
             "arrival_time": solution.Min(time_var),
-            "demand": 0,
+            "pickup": 0,
+            "delivery": 0,
         })
 
         total_distance += route_distance
@@ -140,7 +149,8 @@ def solve_vrp(data: VRPRequest) -> dict:
             "vehicle_id": data.vehicles[vehicle_id].id,
             "stops": stops,
             "total_distance": route_distance,
-            "total_load": route_load,
+            "total_pickup": route_pickup,
+            "total_delivery": route_delivery,
         })
 
     return {

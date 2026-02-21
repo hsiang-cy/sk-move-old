@@ -1,43 +1,36 @@
 import modal
 from fastapi import FastAPI
-from pathlib import Path
-
-# 獲取 src 目錄路徑
-src_path = str(Path(__file__).parent)
 
 # ── 1. 定義 Modal 環境 ──
-image = modal.Image.debian_slim(python_version="3.12").pip_install(
-    "ortools",
-    "fastapi[standard]",
-    "httpx",
+# add_local_python_source 將 vrp 套件直接嵌入 image，不需要手動掛載
+image = (
+    modal.Image.debian_slim(python_version="3.14")
+    .pip_install(
+        "ortools",
+        "fastapi[standard]",
+        "httpx",
+    )
+    .add_local_python_source("vrp")
 )
 
 app = modal.App("ortools-vrp-solver", image=image)
 
-# ── 2. 定義掛載 ──
-# 使用經由檢查確認存在的 modal.mount.Mount 類別
-src_mount = modal.mount.Mount(local_dir=src_path, remote_path="/root/src")
-
-# ── 3. 核心求解函式 (Modal Function) ──
-@app.function(
-    cpu=2.0, 
-    memory=2048,
-    mounts=[src_mount],
-    env={"PYTHONPATH": "/root/src"}
-)
+# ── 2. 核心求解函式 (Modal Function) ──
+# 注意：OR-Tools 的 RoutingModel 搜尋演算法（如 Local Search）主要是單執行緒運作。
+# 因此，將 cpu 設為 1.0 或 2.0 即可，增加更多 CPU 核心並不會加速單一任務的求解速度。
+# 資源分配的重點應在於 'memory'，因為當地點數量 (N) 增加時，
+# 距離與時間矩陣的大小是按 N^2 增長，記憶體不足會導致 OOM (Out of Memory) 崩潰。
+@app.function(cpu=1.0, memory=2048)
 def solve_vrp(job_id: str, data):
     from vrp.solver import solve_vrp_logic
     return solve_vrp_logic(job_id, data)
 
-# ── 4. FastAPI 應用程式 ──
-web_app = FastAPI()
-
-@app.function(
-    mounts=[src_mount],
-    env={"PYTHONPATH": "/root/src"}
-)
+# ── 3. FastAPI 應用程式 ──
+@app.function()
 @modal.asgi_app()
 def api():
     from vrp.router import router as vrp_router
+    web_app = FastAPI()
+    web_app.state.solve_vrp = solve_vrp  # 直接傳入 function reference，不用 from_name
     web_app.include_router(vrp_router)
     return web_app

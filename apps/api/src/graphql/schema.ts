@@ -41,8 +41,16 @@ export const schema = createSchema<Context>({
   `,
   resolvers: {
     Query: {
-      me: async (_, __, context) => {
-        return context.user
+      me: async (_, __, { db, user: currentUser }) => {
+        if (!currentUser || !currentUser.user_id) return null
+
+        const [foundUser] = await db
+          .select()
+          .from(user)
+          .where(eq(user.user_id, currentUser.user_id))
+          .limit(1)
+
+        return foundUser || null
       }
     },
     Mutation: {

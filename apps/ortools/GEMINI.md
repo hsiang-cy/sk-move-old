@@ -1,50 +1,66 @@
-# OR-Tools VRP Solver
+# OR-Tools VRP Solver (Modal.com Migration)
 
-A FastAPI-based application that provides an asynchronous solver for the Vehicle Routing Problem (VRP) using Google's OR-Tools.
+A FastAPI-based application that provides an asynchronous solver for the Vehicle Routing Problem (VRP) using Google's OR-Tools, optimized for deployment on Modal.com.
 
 ## Project Overview
 
-The project aims to provide a robust API for solving complex VRP instances, including constraints for vehicle capacity, time windows, and pickup/delivery requirements.
+The project provides a robust API for solving complex VRP instances. By migrating to Modal.com, we gain "scale-to-zero" capabilities, high-concurrency support, and a simplified deployment pipeline without the need for manual Docker management.
 
 ### Main Technologies
 - **Python 3.14+**
-- **FastAPI**: For building the web API.
-- **Google OR-Tools**: For the optimization logic.
-- **Pydantic**: For data validation and schema definition.
-- **HTTPX**: For sending asynchronous webhook notifications.
+- **FastAPI**: Web API framework.
+- **Google OR-Tools**: Optimization logic.
+- **Modal.com**: Serverless infrastructure and background task management.
+- **Pydantic**: Data validation.
+- **HTTPX**: Webhook notifications.
 
-### Architecture
-- `src/main.py`: Entry point for the FastAPI application.
-- `src/vrp/router.py`: API routes, including the asynchronous `/vrp/solve` endpoint and background task handling.
-- `src/vrp/schema.py`: Pydantic models for `Location`, `Vehicle`, and `VRPRequest`.
-- `src/vrp/solver.py`: Core VRP solving logic using OR-Tools, incorporating Capacity and Time dimensions.
+## Migration Plan to Modal.com
 
-## Building and Running
+To migrate this service to Modal, we will follow these steps:
+
+### 1. Environment & Image Definition
+- **Define `modal.Image`**: Create a base image in `src/main.py` that includes all necessary system and Python dependencies (`ortools`, `fastapi`, `httpx`).
+- **Initialize `modal.App`**: Set up the main Modal application container.
+
+### 2. Core Logic Refactoring (`src/vrp/solver.py`)
+- **Modal Function**: Decorate the `solve_vrp` function with `@app.function()`.
+- **Resource Allocation**: Specify CPU and Memory requirements for the solver to ensure optimal performance for heavy computations.
+- **Webhook Integration**: Move the webhook notification logic into a post-processing step within the Modal function to ensure it executes reliably after the solver finishes.
+
+### 3. API & Routing Refactoring (`src/vrp/router.py`)
+- **Remove `BackgroundTasks`**: Replace FastAPI's local `BackgroundTasks` with Modal's `.spawn()` method.
+- **Asynchronous Triggering**: Update the `/vrp/solve` endpoint to trigger the Modal solver function asynchronously. It will return a Modal `task_id` (as the `job_id`) immediately to the caller.
+
+### 4. Entry Point Update (`src/main.py`)
+- **FastAPI Wrapper**: Use `@app.function().fastapi_endpoint()` to expose the FastAPI application as a serverless web endpoint on Modal.
+- **Dynamic Imports**: Ensure all internal modules (`vrp.router`, `vrp.solver`) are correctly handled within the Modal container environment.
+
+### 5. Local Development & Testing
+- **`modal serve`**: Use the Modal CLI to start a local development session that syncs code changes to the cloud in real-time.
+- **Verification**: Test the end-to-end flow: `Request -> FastAPI -> Modal Spawn -> OR-Tools Solve -> Webhook Callback`.
+
+### 6. Deployment
+- **`modal deploy`**: Perform a final deployment to generate a permanent URL for the production environment.
+- **Domain Configuration**: (Optional) Map a custom domain to the Modal endpoint.
+
+## Building and Running (Modal)
 
 ### Prerequisites
-Ensure you have the following Python packages installed:
-- `fastapi`
-- `uvicorn`
-- `ortools`
-- `pydantic`
-- `httpx`
+1. Install Modal CLI: `pip install modal`
+2. Authenticate: `modal setup`
 
-### Running the Application
-From the root directory, navigate to the `src` folder and run the FastAPI server:
-
+### Development Mode
 ```bash
-cd src
-uvicorn main:app --reload
+modal serve src/main.py
 ```
 
-The API will be available at `http://localhost:8000`. You can access the interactive documentation at `http://localhost:8000/docs`.
-
-### Testing
-There is currently no formal test suite. Tests should be added to a `tests` directory in the future.
+### Production Deployment
+```bash
+modal deploy src/main.py
+```
 
 ## Development Conventions
 
-- **Data Validation**: All API inputs and outputs are strictly validated using Pydantic models defined in `src/vrp/schema.py`.
-- **Asynchronous Processing**: VRP solving is treated as a long-running background task. The `/vrp/solve` endpoint returns a `job_id` and uses a webhook callback to report the final result.
-- **Modular Design**: The VRP logic is encapsulated within the `src/vrp` module, separating routing, schema, and solver logic.
-- **OR-Tools Configuration**: The solver uses `PATH_CHEAPEST_ARC` for the initial strategy and `GUIDED_LOCAL_SEARCH` for metaheuristics, with a configurable time limit.
+- **Serverless First**: Design functions to be stateless.
+- **Explicit Resources**: Always define required CPU/Memory for the solver function to avoid resource contention.
+- **Webhook Reliability**: The solver is responsible for reporting its own success/failure via the provided `webhook_url`.

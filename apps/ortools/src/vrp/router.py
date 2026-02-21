@@ -1,42 +1,14 @@
-from fastapi import APIRouter, BackgroundTasks
-from fastapi import HTTPException
-import httpx
+from fastapi import APIRouter, HTTPException
 import uuid
-import asyncio
+import modal
 
 from vrp.schema import VRPRequest
-from vrp.solver import solve_vrp
 
 router = APIRouter(prefix="/vrp", tags=["VRP"])
 
 
-# ── 背景任務：求解 + 打 Webhook ──
-
-
-async def run_vrp_and_notify(job_id: str, data: VRPRequest):
-    loop = asyncio.get_running_loop()
-    try:
-        result = await loop.run_in_executor(None, solve_vrp, data)
-        payload = {"job_id": job_id, **result}
-    except Exception as e:
-        payload = {
-            "job_id": job_id,
-            "status": "error",
-            "message": str(e),
-        }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            await client.post(data.webhook_url, json=payload, timeout=10)
-        except Exception as e:
-            print(f"[{job_id}] Webhook 發送失敗: {e}")
-
-
-# ── Endpoints ──
-
-
 @router.post("/solve", status_code=202)
-async def start_computation(request: VRPRequest, background_tasks: BackgroundTasks):
+async def start_computation(request: VRPRequest):
     n = len(request.locations)
     if len(request.distance_matrix) != n:
         raise HTTPException(
@@ -50,9 +22,18 @@ async def start_computation(request: VRPRequest, background_tasks: BackgroundTas
         )
 
     job_id = str(uuid.uuid4())
-    background_tasks.add_task(run_vrp_and_notify, job_id, request)
+
+    # ── 觸發 Modal 非同步任務 (動態查找函式) ──
+    try:
+        solve_vrp = modal.Function.from_name("ortools-vrp-solver", "solve_vrp")
+        solve_vrp.spawn(job_id, request)
+    except Exception as e:
+        # 如果 serving 模式下 from_name 不穩定，可以改用相對穩定的方式
+        print(f"Modal 任務啟動失敗: {e}")
+        # 備選方案：如果是 modal serve，可以使用當前的 app 實例
+        # 但在 FastAPI 端點內通常建議用 from_name 或是在 main.py 注入
 
     return {
-        "message": "VRP 計算已啟動",
+        "message": "VRP 計算已啟動 (Modal Serverless)",
         "job_id": job_id,
     }

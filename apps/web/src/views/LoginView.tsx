@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { MapPin } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
+import { authService } from '@/services/auth'
 import MapBackground from '@/components/inspira/MapBackground'
 
 export default function LoginView() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
-  const register = useAuthStore((s) => s.register)
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [account, setAccount] = useState('')
@@ -16,23 +16,30 @@ export default function LoginView() {
   const [peopleName, setPeopleName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [registerSuccess, setRegisterSuccess] = useState(false)
 
   function switchMode(next: 'login' | 'register') {
     setMode(next)
     setFormError(null)
+    setRegisterSuccess(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
     setFormError(null)
+    setRegisterSuccess(false)
     try {
       if (mode === 'login') {
         await login({ account, password })
+        navigate({ to: '/locations' })
       } else {
-        await register({ account, email, password, people_name: peopleName })
+        await authService.register({ account, email, password, people_name: peopleName })
+        setRegisterSuccess(true)
+        setMode('login')
+        setEmail('')
+        setPeopleName('')
       }
-      navigate({ to: '/locations' })
     } catch (e) {
       if (e instanceof Error) {
         if (e.message === 'Account not found' || e.message === 'Invalid password') {
@@ -131,6 +138,12 @@ export default function LoginView() {
                   required
                 />
               </div>
+
+              {registerSuccess && (
+                <div className="alert alert-success py-2.5 text-sm">
+                  <span>註冊成功！請使用帳號密碼登入</span>
+                </div>
+              )}
 
               {formError && (
                 <div className="alert alert-error py-2.5 text-sm">

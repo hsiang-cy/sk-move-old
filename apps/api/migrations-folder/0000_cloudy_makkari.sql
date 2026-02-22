@@ -1,8 +1,28 @@
+CREATE TYPE "public"."account_role" AS ENUM('admin', 'manager', 'normal', 'guest', 'just_view');--> statement-breakpoint
 CREATE TYPE "public"."compute_status" AS ENUM('initial', 'pending', 'computing', 'completed', 'failed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."status" AS ENUM('inactive', 'active', 'deleted');--> statement-breakpoint
-CREATE TYPE "public"."user_role" AS ENUM('admin', 'manager', 'user', 'guest', 'just_view');--> statement-breakpoint
+CREATE TABLE "account" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"status" "status" DEFAULT 'active' NOT NULL,
+	"account_role" "account_role" DEFAULT 'normal' NOT NULL,
+	"account" text NOT NULL,
+	"password" text NOT NULL,
+	"email" text NOT NULL,
+	"company" text,
+	"company_industry" text,
+	"name" text NOT NULL,
+	"phone" text,
+	"point" integer DEFAULT 0 NOT NULL,
+	"comment_for_dev" text,
+	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
+	"updated_at" bigint,
+	"data" jsonb,
+	CONSTRAINT "account_account_unique" UNIQUE("account"),
+	CONSTRAINT "account_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
 CREATE TABLE "compute" (
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
 	"order_id" integer NOT NULL,
 	"status" "status" DEFAULT 'active' NOT NULL,
@@ -13,11 +33,11 @@ CREATE TABLE "compute" (
 	"data" jsonb,
 	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
 	"updated_at" bigint,
-	"comment_for_user" text
+	"comment_for_account" text
 );
 --> statement-breakpoint
 CREATE TABLE "custom_vehicle_type" (
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
 	"status" "status" DEFAULT 'active' NOT NULL,
 	"name" text NOT NULL,
@@ -25,11 +45,11 @@ CREATE TABLE "custom_vehicle_type" (
 	"data" jsonb,
 	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
 	"updated_at" bigint,
-	"comment_for_user" text
+	"comment_for_account" text
 );
 --> statement-breakpoint
 CREATE TABLE "destination" (
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
 	"status" "status" DEFAULT 'active' NOT NULL,
 	"name" text NOT NULL,
@@ -39,18 +59,22 @@ CREATE TABLE "destination" (
 	"data" jsonb,
 	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
 	"updated_at" bigint,
-	"comment_for_user" text
+	"comment_for_account" text
 );
 --> statement-breakpoint
 CREATE TABLE "point_distance" (
-	"id" text PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
+	"a_point" integer NOT NULL,
+	"b_point" integer NOT NULL,
 	"distance_from_a_b" integer NOT NULL,
 	"time_from_a_b" integer NOT NULL,
+	"polyline_from_map_service" text,
+	"polyline_real" text,
 	"data" jsonb
 );
 --> statement-breakpoint
 CREATE TABLE "order" (
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
 	"status" "status" DEFAULT 'active' NOT NULL,
 	"data" jsonb,
@@ -58,12 +82,12 @@ CREATE TABLE "order" (
 	"updated_at" bigint,
 	"destination_snapshot" jsonb NOT NULL,
 	"vehicle_snapshot" jsonb NOT NULL,
-	"comment_for_user" text
+	"comment_for_account" text
 );
 --> statement-breakpoint
 CREATE TABLE "point_log" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"change" integer NOT NULL,
 	"reason" text NOT NULL,
 	"data" jsonb,
@@ -92,28 +116,8 @@ CREATE TABLE "route_stop" (
 	CONSTRAINT "route_stop_route_id_sequence_unique" UNIQUE("route_id","sequence")
 );
 --> statement-breakpoint
-CREATE TABLE "user" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"status" "status" DEFAULT 'active' NOT NULL,
-	"user_role" "user_role" DEFAULT 'user' NOT NULL,
-	"account" text NOT NULL,
-	"password" text NOT NULL,
-	"email" text NOT NULL,
-	"company" text,
-	"company_industry" text,
-	"name" text NOT NULL,
-	"phone" text,
-	"point" integer DEFAULT 0 NOT NULL,
-	"comment_for_dev" text,
-	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
-	"updated_at" bigint,
-	"data" jsonb,
-	CONSTRAINT "user_account_unique" UNIQUE("account"),
-	CONSTRAINT "user_email_unique" UNIQUE("email")
-);
---> statement-breakpoint
 CREATE TABLE "vehicle" (
-	"user_id" integer NOT NULL,
+	"account_id" integer NOT NULL,
 	"id" serial PRIMARY KEY NOT NULL,
 	"status" "status" DEFAULT 'active' NOT NULL,
 	"vehicle_number" text NOT NULL,
@@ -122,32 +126,34 @@ CREATE TABLE "vehicle" (
 	"data" jsonb,
 	"created_at" bigint DEFAULT EXTRACT(EPOCH FROM NOW())::bigint,
 	"updated_at" bigint,
-	"comment_for_user" text
+	"comment_for_account" text
 );
 --> statement-breakpoint
-ALTER TABLE "compute" ADD CONSTRAINT "compute_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "compute" ADD CONSTRAINT "compute_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "compute" ADD CONSTRAINT "compute_order_id_order_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."order"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "custom_vehicle_type" ADD CONSTRAINT "custom_vehicle_type_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "destination" ADD CONSTRAINT "destination_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "order" ADD CONSTRAINT "order_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "point_log" ADD CONSTRAINT "point_log_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "custom_vehicle_type" ADD CONSTRAINT "custom_vehicle_type_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "destination" ADD CONSTRAINT "destination_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "point_distance" ADD CONSTRAINT "point_distance_a_point_destination_id_fk" FOREIGN KEY ("a_point") REFERENCES "public"."destination"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "point_distance" ADD CONSTRAINT "point_distance_b_point_destination_id_fk" FOREIGN KEY ("b_point") REFERENCES "public"."destination"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "order" ADD CONSTRAINT "order_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "point_log" ADD CONSTRAINT "point_log_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "route" ADD CONSTRAINT "route_compute_id_compute_id_fk" FOREIGN KEY ("compute_id") REFERENCES "public"."compute"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "route" ADD CONSTRAINT "route_vehicle_id_vehicle_id_fk" FOREIGN KEY ("vehicle_id") REFERENCES "public"."vehicle"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "route_stop" ADD CONSTRAINT "route_stop_route_id_route_id_fk" FOREIGN KEY ("route_id") REFERENCES "public"."route"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "route_stop" ADD CONSTRAINT "route_stop_destination_id_destination_id_fk" FOREIGN KEY ("destination_id") REFERENCES "public"."destination"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "vehicle" ADD CONSTRAINT "vehicle_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "vehicle" ADD CONSTRAINT "vehicle_account_id_account_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."account"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "vehicle" ADD CONSTRAINT "vehicle_vehicle_type_custom_vehicle_type_id_fk" FOREIGN KEY ("vehicle_type") REFERENCES "public"."custom_vehicle_type"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "vehicle" ADD CONSTRAINT "vehicle_depot_id_destination_id_fk" FOREIGN KEY ("depot_id") REFERENCES "public"."destination"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "compute_user_id_index" ON "compute" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "account_account_index" ON "account" USING btree ("account");--> statement-breakpoint
+CREATE INDEX "account_account_gin" ON "account" USING gin (to_tsvector('english', "account"));--> statement-breakpoint
+CREATE INDEX "compute_account_id_index" ON "compute" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "compute_order_id_index" ON "compute" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "destination_user_id_index" ON "destination" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "destination_account_id_index" ON "destination" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "destination_name_index" ON "destination" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "destination_address_index" ON "destination" USING btree ("address");--> statement-breakpoint
-CREATE INDEX "order_user_id_index" ON "order" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "point_log_user_id_index" ON "point_log" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "order_account_id_index" ON "order" USING btree ("account_id");--> statement-breakpoint
+CREATE INDEX "point_log_account_id_index" ON "point_log" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "route_compute_id_index" ON "route" USING btree ("compute_id");--> statement-breakpoint
 CREATE INDEX "route_vehicle_id_index" ON "route" USING btree ("vehicle_id");--> statement-breakpoint
 CREATE INDEX "route_stop_route_id_index" ON "route_stop" USING btree ("route_id");--> statement-breakpoint
-CREATE INDEX "user_account_index" ON "user" USING btree ("account");--> statement-breakpoint
-CREATE INDEX "user_account_gin" ON "user" USING gin (to_tsvector('english', "account"));--> statement-breakpoint
-CREATE INDEX "vehicle_user_id_index" ON "vehicle" USING btree ("user_id");
+CREATE INDEX "vehicle_account_id_index" ON "vehicle" USING btree ("account_id");

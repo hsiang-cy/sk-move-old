@@ -24,13 +24,13 @@ export const computeStatus = pgEnum('compute_status',
         'failed',         // 失敗（計算失敗、timeout、外部服務）
         'cancelled'       // 取消
     ]);
-export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'user', 'guest', 'just_view']); // just_view 只能get, 不能 post、put、delete
+export const accountRoleEnum = pgEnum('account_role', ['admin', 'manager', 'normal', 'guest', 'just_view']); // just_view 只能get, 不能 post、put、delete
 
 // 使用者
-export const user = pgTable('user', {
-    user_id: serial('id').primaryKey(),
+export const account = pgTable('account', {
+    account_id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'),
-    user_role: userRoleEnum('user_role').notNull().default('user'), // 權限，預設為 user
+    account_role: accountRoleEnum('account_role').notNull().default('normal'), // 權限，預設為 normal
 
     account: text('account').unique().notNull(),
     password: text('password').notNull(),
@@ -49,13 +49,13 @@ export const user = pgTable('user', {
     data: jsonb('data'),
 }, (table) => ([
     index().on(table.account),
-    index("user_account_gin").using('gin', sql`to_tsvector('english', ${table.account})`)
+    index("account_account_gin").using('gin', sql`to_tsvector('english', ${table.account})`)
 ]))
 
 // 點數紀錄
 export const point_log = pgTable('point_log', {
     id: serial('id').primaryKey(),
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     change: integer('change').notNull(), // 點數變動，正數表示增加，負數表示減少
     reason: text('reason').notNull(), // 點數變動原因，例如 "compute_cost", "manual_adjustment", "refund" 等
 
@@ -63,12 +63,12 @@ export const point_log = pgTable('point_log', {
 
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
 }, (table) => ([
-    index().on(table.user_id),
+    index().on(table.account_id),
 ]))
 
 // 地點
 export const destination = pgTable('destination', {
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
 
@@ -91,17 +91,17 @@ export const destination = pgTable('destination', {
     */
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
     updated_at: bigint('updated_at', { mode: 'number' }),
-    comment_for_user: text('comment_for_user'), // 給使用者看的備註欄位，使用者會看到
+    comment_for_account: text('comment_for_account'), // 給使用者看的備註欄位，使用者會看到
 
 }, (table) => ([
-    index().on(table.user_id),
+    index().on(table.account_id),
     index().on(table.name),
     index().on(table.address),
 ]))
 
 // 使用者自訂的車輛類型
 export const custom_vehicle_type = pgTable('custom_vehicle_type', {
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
 
@@ -115,12 +115,12 @@ export const custom_vehicle_type = pgTable('custom_vehicle_type', {
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
     updated_at: bigint('updated_at', { mode: 'number' }),
 
-    comment_for_user: text('comment_for_user'), // 給使用者看的備註欄位，使用者會看到
+    comment_for_account: text('comment_for_account'), // 給使用者看的備註欄位，使用者會看到
 })
 
 // 車輛
 export const vehicle = pgTable('vehicle', {
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
 
@@ -139,14 +139,14 @@ export const vehicle = pgTable('vehicle', {
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
     updated_at: bigint('updated_at', { mode: 'number' }),
 
-    comment_for_user: text('comment_for_user'), // 給使用者看的備註欄位，使用者會看到
+    comment_for_account: text('comment_for_account'), // 給使用者看的備註欄位，使用者會看到
 }, (table) => ([
-    index().on(table.user_id),
+    index().on(table.account_id),
 ]));
 
 // 一筆訂單(一筆訂單可以多次計算)
 export const order = pgTable('order', {
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
 
@@ -161,15 +161,15 @@ export const order = pgTable('order', {
     destination_snapshot: jsonb('destination_snapshot').notNull(),  // 建立訂單時地點的快照
     vehicle_snapshot: jsonb('vehicle_snapshot').notNull(),          // 建立訂單時車輛的快照
 
-    comment_for_user: text('comment_for_user'), // 給使用者看的備註欄位，使用者會看到
+    comment_for_account: text('comment_for_account'), // 給使用者看的備註欄位，使用者會看到
 
 }, (table) => ([
-    index().on(table.user_id),
+    index().on(table.account_id),
 ]));
 
 // 一次計算任務
 export const compute = pgTable('compute', {
-    user_id: integer('user_id').notNull().references(() => user.user_id, { onDelete: 'cascade' }),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
     id: serial('id').primaryKey(),
     order_id: integer('order_id').notNull().references(() => order.id), // 對應的訂單
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
@@ -195,10 +195,10 @@ export const compute = pgTable('compute', {
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
     updated_at: bigint('updated_at', { mode: 'number' }),
 
-    comment_for_user: text('comment_for_user'), // 給使用者看的備註欄位，使用者會看到
+    comment_for_account: text('comment_for_account'), // 給使用者看的備註欄位，使用者會看到
 
 }, (table) => ([
-    index().on(table.user_id),
+    index().on(table.account_id),
     index().on(table.order_id),
 ]));
 
@@ -236,15 +236,17 @@ export const route_stop = pgTable('route_stop', {
 ]))
 
 export const info_between_two_point = pgTable('point_distance', {
-    id: text('id').primaryKey(),
-    // 由 a_point_id 和 b_point_id 組合而成，例如 "1_2" 表示從地點 1 到地點 2 的距離和時間
-    // 不再使用外鍵，因為地點可能會被刪除，但想保留歷史計算資料，所以改用text_id，必須確保業務邏輯中正確使用
+    id: serial('id').primaryKey(),
+    
+    a_point: integer('a_point').references(() => destination.id).notNull(), // 參考 destination 表的 id
+    b_point: integer('b_point').references(() => destination.id).notNull(),
 
     distance_from_a_to_b: integer('distance_from_a_b').notNull(),   // 公尺
     time_from_a_to_b: integer('time_from_a_b').notNull(),           // 分鐘
+    polyline_from_map_service: text('polyline_from_map_service'), // 從地圖服務取得的路線 polyline 編碼
+    polyline_real: text('polyline_real'), // 真實路線的 polyline 編碼，可能會因為交通狀況等因素與預估路線不同
 
     data: jsonb('data'),
-    // 包括A、B的經緯度，應為不再會用外鍵關聯的資料表
 
 });
 

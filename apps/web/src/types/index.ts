@@ -36,6 +36,13 @@ export interface LoginCredentials {
   password: string
 }
 
+export interface RegisterCredentials {
+  account: string
+  email: string
+  password: string
+  people_name: string
+}
+
 export interface AuthUser {
   id: string
   account: string

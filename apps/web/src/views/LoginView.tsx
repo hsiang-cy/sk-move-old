@@ -7,27 +7,42 @@ import MapBackground from '@/components/inspira/MapBackground'
 export default function LoginView() {
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const register = useAuthStore((s) => s.register)
 
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [account, setAccount] = useState('')
   const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('')
+  const [peopleName, setPeopleName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
-  async function handleLogin(e: React.FormEvent) {
+  function switchMode(next: 'login' | 'register') {
+    setMode(next)
+    setFormError(null)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
-    setLoginError(null)
+    setFormError(null)
     try {
-      await login({ account, password })
+      if (mode === 'login') {
+        await login({ account, password })
+      } else {
+        await register({ account, email, password, people_name: peopleName })
+      }
       navigate({ to: '/locations' })
     } catch (e) {
-      setLoginError(
-        e instanceof Error
-          ? (e.message === 'Account not found' || e.message === 'Invalid password')
-            ? '帳號或密碼錯誤'
-            : e.message
-          : '登入失敗，請稍後再試',
-      )
+      if (e instanceof Error) {
+        if (e.message === 'Account not found' || e.message === 'Invalid password') {
+          setFormError('帳號或密碼錯誤')
+        } else {
+          setFormError(e.message)
+        }
+      } else {
+        setFormError(mode === 'login' ? '登入失敗，請稍後再試' : '註冊失敗，請稍後再試')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -48,9 +63,11 @@ export default function LoginView() {
               </div>
             </div>
 
-            <h2 className="font-semibold text-base text-base-content/70 mb-4">登入帳號</h2>
+            <h2 className="font-semibold text-base text-base-content/70 mb-4">
+              {mode === 'login' ? '登入帳號' : '建立帳號'}
+            </h2>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="form-control">
                 <label className="label pt-0">
                   <span className="label-text">帳號</span>
@@ -66,6 +83,40 @@ export default function LoginView() {
                 />
               </div>
 
+              {mode === 'register' && (
+                <>
+                  <div className="form-control">
+                    <label className="label pt-0">
+                      <span className="label-text">電子郵件</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="請輸入電子郵件"
+                      className="input input-bordered w-full"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label pt-0">
+                      <span className="label-text">姓名</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={peopleName}
+                      onChange={(e) => setPeopleName(e.target.value)}
+                      placeholder="請輸入姓名"
+                      className="input input-bordered w-full"
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="form-control">
                 <label className="label pt-0">
                   <span className="label-text">密碼</span>
@@ -76,14 +127,14 @@ export default function LoginView() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="請輸入密碼"
                   className="input input-bordered w-full"
-                  autoComplete="current-password"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   required
                 />
               </div>
 
-              {loginError && (
+              {formError && (
                 <div className="alert alert-error py-2.5 text-sm">
-                  <span>{loginError}</span>
+                  <span>{formError}</span>
                 </div>
               )}
 
@@ -93,9 +144,29 @@ export default function LoginView() {
                 disabled={isLoading}
               >
                 {isLoading && <span className="loading loading-spinner loading-xs" />}
-                {isLoading ? '登入中...' : '登入'}
+                {isLoading
+                  ? (mode === 'login' ? '登入中...' : '註冊中...')
+                  : (mode === 'login' ? '登入' : '建立帳號')}
               </button>
             </form>
+
+            <div className="text-center mt-4 text-sm text-base-content/50">
+              {mode === 'login' ? (
+                <>
+                  還沒有帳號？{' '}
+                  <button className="link link-primary" onClick={() => switchMode('register')}>
+                    立即註冊
+                  </button>
+                </>
+              ) : (
+                <>
+                  已有帳號？{' '}
+                  <button className="link link-primary" onClick={() => switchMode('login')}>
+                    返回登入
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -85,16 +85,17 @@ Create a file in `src/routes/` (e.g., `_auth.orders.tsx`) — the router plugin 
 
 ## apps/ortools — VRP Solver (Python + Modal)
 
-**Stack:** Python 3.14 · FastAPI · Google OR-Tools · Modal · Pydantic · httpx
+**Stack:** Python 3.14 · FastAPI · Google OR-Tools · Modal · Pydantic · httpx · uv
 
 ### Commands (run from `apps/ortools/`)
 ```bash
-modal serve src/main.py    # Hot-reload dev on Modal infrastructure
-modal deploy src/main.py   # Deploy to Modal
-python src/local_dev.py    # Pure local dev (no Modal, uses uvicorn on :8000)
+uv sync                         # Install / sync deps from pyproject.toml into .venv
+uv run python src/local_dev.py  # Pure local dev (no Modal, uvicorn on :8000)
+uv run modal serve src/main.py  # Hot-reload dev on Modal infrastructure
+uv run modal deploy src/main.py # Deploy to Modal
 ```
 
-Dependencies are declared inside `src/main.py` via `modal.Image` (no `requirements.txt`).
+Dependencies are declared in `pyproject.toml`. Runtime deps (`ortools`, `fastapi[standard]`, `httpx`, `uvicorn`) go under `[project].dependencies`; `modal` is a dev-only dep under `[dependency-groups].dev`.
 
 ### Architecture
 - `src/main.py` — Defines Modal `App`, image, and exposes two components: `solve_vrp` (compute function, 1 CPU / 2 GB RAM) and `api` (ASGI FastAPI app).

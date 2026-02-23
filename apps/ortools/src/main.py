@@ -5,11 +5,8 @@ from fastapi import FastAPI
 # add_local_python_source 將 vrp 套件直接嵌入 image，不需要手動掛載
 image = (
     modal.Image.debian_slim(python_version="3.14")
-    .pip_install(
-        "ortools",
-        "fastapi[standard]",
-        "httpx",
-    )
+    .pip_install("uv")
+    .run_commands("uv pip install --system ortools 'fastapi[standard]' httpx")
     .add_local_python_source("vrp")
 )
 

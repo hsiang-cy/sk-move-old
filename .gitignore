@@ -3,3 +3,8 @@
 **/build/
 
 **/.env
+
+# Python (apps/ortools)
+**/.venv/
+**/__pycache__/
+**/*.pyc

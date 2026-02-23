@@ -2,6 +2,33 @@ import { and, eq } from 'drizzle-orm'
 import { destination as destinationTable } from '../../db/schema'
 import { requireAuth, type Context } from '../context'
 
+export const destinationTypeDefs = /* GraphQL */ `
+  type Destination {
+    id:                  ID!
+    account_id:          Int!
+    status:              Status!
+    name:                String!
+    address:             String!
+    lat:                 String!
+    lng:                 String!
+    data:                JSON
+    created_at:          Float
+    updated_at:          Float
+    comment_for_account: String
+  }
+
+  extend type Query {
+    destinations(status: Status): [Destination!]!
+    destination(id: ID!): Destination
+  }
+
+  extend type Mutation {
+    createDestination(name: String!, address: String!, lat: String!, lng: String!, data: JSON, comment_for_account: String): Destination!
+    updateDestination(id: ID!, name: String, address: String, lat: String, lng: String, data: JSON, comment_for_account: String): Destination!
+    deleteDestination(id: ID!): Destination!
+  }
+`
+
 export const destinationResolvers = {
   Query: {
     destinations: async (_: any, args: { status?: string }, { db, user }: Context) => {

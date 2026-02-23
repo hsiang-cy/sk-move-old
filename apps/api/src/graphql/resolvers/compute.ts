@@ -8,6 +8,58 @@ import {
 } from '../../db/schema'
 import { requireAuth, type Context } from '../context'
 
+export const computeTypeDefs = /* GraphQL */ `
+  type Compute {
+    id:                  ID!
+    account_id:          Int!
+    order_id:            Int!
+    status:              Status!
+    compute_status:      ComputeStatus!
+    start_time:          Float
+    end_time:            Float
+    fail_reason:         String
+    data:                JSON
+    created_at:          Float
+    updated_at:          Float
+    comment_for_account: String
+    routes:              [Route!]!
+  }
+
+  type Route {
+    id:             ID!
+    compute_id:     Int!
+    vehicle_id:     Int!
+    status:         Status!
+    total_distance: Int!
+    total_time:     Int!
+    total_load:     Int!
+    created_at:     Float
+    vehicle:        Vehicle
+    stops:          [RouteStop!]!
+  }
+
+  type RouteStop {
+    id:             ID!
+    route_id:       Int!
+    destination_id: Int!
+    sequence:       Int!
+    arrival_time:   Int!
+    demand:         Int!
+    created_at:     Float
+    destination:    Destination
+  }
+
+  extend type Query {
+    computes(orderId: ID, status: ComputeStatus): [Compute!]!
+    compute(id: ID!): Compute
+  }
+
+  extend type Mutation {
+    createCompute(order_id: ID!, data: JSON, comment_for_account: String): Compute!
+    cancelCompute(id: ID!): Compute!
+  }
+`
+
 export const computeResolvers = {
   Query: {
     computes: async (_: any, args: { orderId?: string; status?: string }, { db, user }: Context) => {

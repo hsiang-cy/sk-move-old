@@ -2,6 +2,31 @@ import { and, eq } from 'drizzle-orm'
 import { order as orderTable, compute as computeTable } from '../../db/schema'
 import { requireAuth, type Context } from '../context'
 
+export const orderTypeDefs = /* GraphQL */ `
+  type Order {
+    id:                   ID!
+    account_id:           Int!
+    status:               Status!
+    data:                 JSON
+    created_at:           Float
+    updated_at:           Float
+    destination_snapshot: JSON!
+    vehicle_snapshot:     JSON!
+    comment_for_account:  String
+    computes:             [Compute!]!
+  }
+
+  extend type Query {
+    orders(status: Status): [Order!]!
+    order(id: ID!): Order
+  }
+
+  extend type Mutation {
+    createOrder(destination_snapshot: JSON!, vehicle_snapshot: JSON!, data: JSON, comment_for_account: String): Order!
+    deleteOrder(id: ID!): Order!
+  }
+`
+
 export const orderResolvers = {
   Query: {
     orders: async (_: any, args: { status?: string }, { db, user }: Context) => {

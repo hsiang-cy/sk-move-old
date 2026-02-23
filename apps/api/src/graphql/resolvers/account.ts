@@ -4,6 +4,49 @@ import { sign } from 'hono/jwt'
 import { account as accountTable, point_log } from '../../db/schema'
 import { requireAuth, type Context } from '../context'
 
+export const accountTypeDefs = /* GraphQL */ `
+  type Account {
+    account_id:       ID!
+    status:           Status!
+    account_role:     AccountRole!
+    account:          String!
+    email:            String!
+    company_name:     String
+    company_industry: String
+    people_name:      String!
+    phone:            String
+    point:            Int!
+    created_at:       Float
+    updated_at:       Float
+    data:             JSON
+    point_logs:       [PointLog!]!
+  }
+
+  type AuthPayload {
+    token:   String!
+    account: Account!
+  }
+
+  type PointLog {
+    id:         ID!
+    account_id: Int!
+    change:     Int!
+    reason:     String!
+    data:       JSON
+    created_at: Float
+  }
+
+  extend type Query {
+    me: Account
+    pointLogs: [PointLog!]!
+  }
+
+  extend type Mutation {
+    register(account: String!, email: String!, password: String!, people_name: String!): AuthPayload!
+    login(account: String!, password: String!): AuthPayload!
+  }
+`
+
 export const accountResolvers = {
   Query: {
     me: async (_: any, __: any, { db, user }: Context) => {

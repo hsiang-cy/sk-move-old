@@ -6,6 +6,51 @@ import {
 } from '../../db/schema'
 import { requireAuth, type Context } from '../context'
 
+export const vehicleTypeDefs = /* GraphQL */ `
+  type CustomVehicleType {
+    id:                  ID!
+    account_id:          Int!
+    status:              Status!
+    name:                String!
+    capacity:            Int!
+    data:                JSON
+    created_at:          Float
+    updated_at:          Float
+    comment_for_account: String
+  }
+
+  type Vehicle {
+    id:                  ID!
+    account_id:          Int!
+    status:              Status!
+    vehicle_number:      String!
+    vehicle_type:        Int!
+    depot_id:            Int
+    data:                JSON
+    created_at:          Float
+    updated_at:          Float
+    comment_for_account: String
+    vehicleTypeInfo:     CustomVehicleType
+    depot:               Destination
+  }
+
+  extend type Query {
+    customVehicleTypes(status: Status): [CustomVehicleType!]!
+    customVehicleType(id: ID!): CustomVehicleType
+    vehicles(status: Status): [Vehicle!]!
+    vehicle(id: ID!): Vehicle
+  }
+
+  extend type Mutation {
+    createCustomVehicleType(name: String!, capacity: Int!, data: JSON, comment_for_account: String): CustomVehicleType!
+    updateCustomVehicleType(id: ID!, name: String, capacity: Int, data: JSON, comment_for_account: String): CustomVehicleType!
+    deleteCustomVehicleType(id: ID!): CustomVehicleType!
+    createVehicle(vehicle_number: String!, vehicle_type: ID!, depot_id: ID, data: JSON, comment_for_account: String): Vehicle!
+    updateVehicle(id: ID!, vehicle_number: String, vehicle_type: ID, depot_id: ID, data: JSON, comment_for_account: String): Vehicle!
+    deleteVehicle(id: ID!): Vehicle!
+  }
+`
+
 export const vehicleResolvers = {
   Query: {
     customVehicleTypes: async (_: any, args: { status?: string }, { db, user }: Context) => {

@@ -7,6 +7,8 @@ export type Context = {
   env: {
     DATABASE_URL: string
     JWT_SECRET: string
+    ORTOOLS_URL: string
+    API_BASE_URL: string
   }
 }
 

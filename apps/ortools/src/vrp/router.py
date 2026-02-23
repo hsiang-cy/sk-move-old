@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Request
-import uuid
 
 from vrp.schema import VRPRequest
 
@@ -20,12 +19,10 @@ async def start_computation(request: VRPRequest, req: Request):
             detail=f"time_matrix 應為 {n}x{n}，但收到 {len(request.time_matrix)} 列",
         )
 
-    job_id = str(uuid.uuid4())
-
     solve_vrp = req.app.state.solve_vrp
-    await solve_vrp.spawn.aio(job_id, request)
+    await solve_vrp.spawn.aio(request.compute_id, request)
 
     return {
         "message": "VRP 計算已啟動 (Modal Serverless)",
-        "job_id": job_id,
+        "compute_id": request.compute_id,
     }

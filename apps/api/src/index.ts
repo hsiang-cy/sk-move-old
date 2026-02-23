@@ -3,10 +3,14 @@ import { createYoga } from 'graphql-yoga'
 import { createDb } from './db/connect'
 import { schema, Context } from './graphql/schema'
 import { verify } from 'hono/jwt'
+import { webhookRoutes } from './routes/webhook'
 
 type Bindings = {
   DATABASE_URL: string
   JWT_SECRET: string
+  ORTOOLS_URL: string
+  API_BASE_URL: string
+  ORTOOLS_WEBHOOK_SECRET?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -18,7 +22,7 @@ function performStartupChecks(env: Bindings) {
   if (isStartupChecked) return
 
   // 1. 檢查必要的環境變數是否定義 (純記憶體操作，極快)
-  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'] as const
+  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'ORTOOLS_URL', 'API_BASE_URL'] as const
   for (const key of requiredEnvVars) {
     if (!env[key]) {
       console.error(`[Startup Error] Missing environment variable: ${key}`)
@@ -65,6 +69,9 @@ const yoga = createYoga<{ request: Request; env: Bindings }, Context>({
     }
   }
 })
+
+// Webhook routes (server-to-server, no JWT auth)
+app.route('/', webhookRoutes)
 
 // 將 Yoga 掛載到 /graphql
 app.all('/graphql', (c) => yoga.fetch(c.req.raw, { env: c.env }))

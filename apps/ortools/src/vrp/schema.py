@@ -21,6 +21,7 @@ class Vehicle(BaseModel):
 
 
 class VRPRequest(BaseModel):
+    compute_id: int
     webhook_url: str
 
     depot_index: int = 0

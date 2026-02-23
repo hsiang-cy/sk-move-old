@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/sean2/Desktop/side/sk-move/apps/api && npx tsc --noEmit 2>&1)"
+    ]
+  }
+}

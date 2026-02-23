@@ -21,9 +21,9 @@ app = modal.App("ortools-vrp-solver", image=image)
 # 資源分配的重點應在於 'memory'，因為當地點數量 (N) 增加時，
 # 距離與時間矩陣的大小是按 N^2 增長，記憶體不足會導致 OOM (Out of Memory) 崩潰。
 @app.function(cpu=1.0, memory=2048)
-def solve_vrp(job_id: str, data):
+def solve_vrp(compute_id: int, data):
     from vrp.solver import solve_vrp_logic
-    return solve_vrp_logic(job_id, data)
+    return solve_vrp_logic(compute_id, data)
 
 # ── 3. FastAPI 應用程式 ──
 @app.function()

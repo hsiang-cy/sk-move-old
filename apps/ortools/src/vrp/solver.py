@@ -7,7 +7,7 @@ from vrp.schema import VRPRequest
 
 # ── 不在此處定義 App，由外部或動態裝飾 ──
 
-def solve_vrp_logic(job_id: str, data: VRPRequest):
+def solve_vrp_logic(compute_id: int, data: VRPRequest):
     """
     VRP 求解的核心邏輯。
     """
@@ -164,11 +164,11 @@ def solve_vrp_logic(job_id: str, data: VRPRequest):
             "total_distance": total_distance,
             "routes": routes,
         }
-        payload = {"job_id": job_id, **result}
+        payload = {"compute_id": compute_id, **result}
 
     except Exception as e:
         payload = {
-            "job_id": job_id,
+            "compute_id": compute_id,
             "status": "error",
             "message": str(e),
         }
@@ -179,6 +179,6 @@ def solve_vrp_logic(job_id: str, data: VRPRequest):
             with httpx.Client() as client:
                 client.post(data.webhook_url, json=payload, timeout=10)
         except Exception as webhook_err:
-            print(f"[{job_id}] Webhook 發送失敗: {webhook_err}")
+            print(f"[compute_id={compute_id}] Webhook 發送失敗: {webhook_err}")
 
     return payload

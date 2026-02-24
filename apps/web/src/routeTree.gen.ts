@@ -13,7 +13,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthVehiclesRouteImport } from './routes/_auth.vehicles'
 import { Route as AuthVehicleTypesRouteImport } from './routes/_auth.vehicle-types'
+import { Route as AuthOrdersRouteImport } from './routes/_auth.orders'
 import { Route as AuthLocationsRouteImport } from './routes/_auth.locations'
+import { Route as AuthComputesRouteImport } from './routes/_auth.computes'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -34,23 +36,37 @@ const AuthVehicleTypesRoute = AuthVehicleTypesRouteImport.update({
   path: '/vehicle-types',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthOrdersRoute = AuthOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthLocationsRoute = AuthLocationsRouteImport.update({
   id: '/locations',
   path: '/locations',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthComputesRoute = AuthComputesRouteImport.update({
+  id: '/computes',
+  path: '/computes',
   getParentRoute: () => AuthRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/computes': typeof AuthComputesRoute
   '/locations': typeof AuthLocationsRoute
+  '/orders': typeof AuthOrdersRoute
   '/vehicle-types': typeof AuthVehicleTypesRoute
   '/vehicles': typeof AuthVehiclesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/computes': typeof AuthComputesRoute
   '/locations': typeof AuthLocationsRoute
+  '/orders': typeof AuthOrdersRoute
   '/vehicle-types': typeof AuthVehicleTypesRoute
   '/vehicles': typeof AuthVehiclesRoute
 }
@@ -58,20 +74,38 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/_auth/computes': typeof AuthComputesRoute
   '/_auth/locations': typeof AuthLocationsRoute
+  '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/vehicle-types': typeof AuthVehicleTypesRoute
   '/_auth/vehicles': typeof AuthVehiclesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/locations' | '/vehicle-types' | '/vehicles'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/computes'
+    | '/locations'
+    | '/orders'
+    | '/vehicle-types'
+    | '/vehicles'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/locations' | '/vehicle-types' | '/vehicles'
+  to:
+    | '/'
+    | '/login'
+    | '/computes'
+    | '/locations'
+    | '/orders'
+    | '/vehicle-types'
+    | '/vehicles'
   id:
     | '__root__'
     | '/_auth'
     | '/login'
+    | '/_auth/computes'
     | '/_auth/locations'
+    | '/_auth/orders'
     | '/_auth/vehicle-types'
     | '/_auth/vehicles'
   fileRoutesById: FileRoutesById
@@ -111,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVehicleTypesRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/orders': {
+      id: '/_auth/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthOrdersRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/locations': {
       id: '/_auth/locations'
       path: '/locations'
@@ -118,17 +159,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLocationsRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/computes': {
+      id: '/_auth/computes'
+      path: '/computes'
+      fullPath: '/computes'
+      preLoaderRoute: typeof AuthComputesRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
+  AuthComputesRoute: typeof AuthComputesRoute
   AuthLocationsRoute: typeof AuthLocationsRoute
+  AuthOrdersRoute: typeof AuthOrdersRoute
   AuthVehicleTypesRoute: typeof AuthVehicleTypesRoute
   AuthVehiclesRoute: typeof AuthVehiclesRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthComputesRoute: AuthComputesRoute,
   AuthLocationsRoute: AuthLocationsRoute,
+  AuthOrdersRoute: AuthOrdersRoute,
   AuthVehicleTypesRoute: AuthVehicleTypesRoute,
   AuthVehiclesRoute: AuthVehiclesRoute,
 }

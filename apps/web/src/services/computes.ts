@@ -1,10 +1,6 @@
 import { gql } from './api'
 import type { Compute, Route } from '@/types'
 
-// API 回傳的計算任務型別（與前端型別相同）
-type ApiCompute = Compute
-type ApiRoute = Route
-
 const COMPUTE_FIELDS = `
   id
   account_id
@@ -68,7 +64,7 @@ export const computesService = {
         }`
       : `{ computes { ${COMPUTE_FIELDS} } }`
 
-    const data = await gql<{ computes: ApiCompute[] }>(
+    const data = await gql<{ computes: Compute[] }>(
       query,
       orderId ? { orderId } : undefined,
     )
@@ -81,7 +77,7 @@ export const computesService = {
    * 包含關聯的訂單資訊（可選）
    */
   async getById(id: string): Promise<Compute | null> {
-    const data = await gql<{ compute: ApiCompute | null }>(
+    const data = await gql<{ compute: Compute | null }>(
       `query GetCompute($id: ID!) {
         compute(id: $id) {
           ${COMPUTE_FIELDS}
@@ -105,7 +101,7 @@ export const computesService = {
     data?: Record<string, any>
     comment_for_account?: string
   }): Promise<Compute> {
-    const result = await gql<{ createCompute: ApiCompute }>(
+    const result = await gql<{ createCompute: Compute }>(
       `mutation CreateCompute(
         $order_id: ID!,
         $data: JSON,
@@ -134,7 +130,7 @@ export const computesService = {
    * 驗證狀態是否允許取消（pending 或 computing）
    */
   async cancel(id: string): Promise<Compute> {
-    const result = await gql<{ cancelCompute: ApiCompute }>(
+    const result = await gql<{ cancelCompute: Compute }>(
       `mutation CancelCompute($id: ID!) {
         cancelCompute(id: $id) {
           ${COMPUTE_FIELDS}
@@ -152,7 +148,7 @@ export const computesService = {
    * 包含關聯的車輛和地點資訊
    */
   async getRoutes(computeId: string): Promise<Route[]> {
-    const data = await gql<{ compute: { routes: ApiRoute[] } | null }>(
+    const data = await gql<{ compute: { routes: Route[] } | null }>(
       `query GetComputeRoutes($computeId: ID!) {
         compute(id: $computeId) {
           routes {

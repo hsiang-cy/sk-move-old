@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import type { Order } from '@/types'
+import { formatTimestamp } from '@/lib/utils'
 
 interface OrderDetailModalProps {
   open: boolean
@@ -14,22 +15,9 @@ export default function OrderDetailModal({ open, order, onClose }: OrderDetailMo
   if (!open || !order) return null
 
   function goToComputes() {
-    // TODO: 實作前往計算頁面（需要先建立 /computes 路由）
     if (!order) return
-    console.log('前往計算頁面，訂單 ID:', order.id)
     onClose()
-  }
-
-  function formatTimestamp(timestamp: number | null) {
-    if (!timestamp) return '-'
-    return new Date(timestamp * 1000).toLocaleString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
+    navigate({ to: '/computes', search: { orderId: order.id } })
   }
 
   return (

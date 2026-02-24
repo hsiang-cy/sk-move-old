@@ -2,17 +2,14 @@ import { useRef, useState } from 'react'
 import { Plus, Eye, Trash2, FileText, ArrowRight } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useOrders, useDeleteOrder } from '@/hooks/useOrders'
-import { useLocations } from '@/hooks/useLocations'
-import { useVehicles } from '@/hooks/useVehicles'
 import OrderFormModal from '@/components/orders/OrderFormModal'
 import OrderDetailModal from '@/components/orders/OrderDetailModal'
+import { formatTimestamp } from '@/lib/utils'
 import type { Order } from '@/types'
 
 export default function OrdersView() {
   const navigate = useNavigate()
   const { data: orders = [], isLoading, error, refetch } = useOrders()
-  const { data: locations = [] } = useLocations()
-  const { data: vehicles = [] } = useVehicles()
   const deleteOrder = useDeleteOrder()
 
   const [showFormModal, setShowFormModal] = useState(false)
@@ -39,19 +36,7 @@ export default function OrdersView() {
   }
 
   function goToComputes(orderId: string) {
-    // TODO: 實作前往計算頁面（需要先建立 /computes 路由）
-    console.log('前往計算頁面，訂單 ID:', orderId)
-  }
-
-  function formatTimestamp(timestamp: number | null) {
-    if (!timestamp) return '-'
-    return new Date(timestamp * 1000).toLocaleString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    navigate({ to: '/computes', search: { orderId } })
   }
 
   return (

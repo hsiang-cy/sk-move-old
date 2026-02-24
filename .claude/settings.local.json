@@ -4,7 +4,8 @@
       "Bash(cd /c/Users/sean2/Desktop/side/sk-move/apps/api && npx tsc --noEmit 2>&1)",
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(cd \"C:\\\\Users\\\\sean2\\\\Desktop\\\\side\\\\sk-move\\\\apps\\\\web\" && pnpm build 2>&1)"
     ]
   }
 }

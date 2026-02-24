@@ -1,11 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { MapPin, Truck, Tag, LogOut } from 'lucide-react'
+import { MapPin, Truck, Tag, ClipboardList, Cpu, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 
 const navItems = [
-  { to: '/locations',     icon: MapPin, label: '地點管理' },
-  { to: '/vehicles',      icon: Truck,  label: '車輛管理' },
-  { to: '/vehicle-types', icon: Tag,    label: '車輛類型' },
+  { to: '/locations',     icon: MapPin,          label: '地點管理' },
+  { to: '/vehicles',      icon: Truck,           label: '車輛管理' },
+  { to: '/vehicle-types', icon: Tag,             label: '車輛類型' },
+  { to: '/orders',        icon: ClipboardList,   label: '訂單管理' },
+  { to: '/computes',      icon: Cpu,             label: '計算任務' },
 ] as const
 
 export default function AppSidebar() {

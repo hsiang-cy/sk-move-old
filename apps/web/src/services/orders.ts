@@ -1,9 +1,6 @@
 import { gql } from './api'
 import type { Order, DestinationSnapshot, VehicleSnapshot } from '@/types'
 
-// API 回傳的訂單型別（與前端型別相同）
-type ApiOrder = Order
-
 const FIELDS = `
   id
   account_id
@@ -22,7 +19,7 @@ export const ordersService = {
    * 查詢 orders(status: active) 並包含快照資料
    */
   async getAll(): Promise<Order[]> {
-    const data = await gql<{ orders: ApiOrder[] }>(
+    const data = await gql<{ orders: Order[] }>(
       `{ orders(status: active) { ${FIELDS} } }`,
     )
     return data.orders
@@ -34,7 +31,7 @@ export const ordersService = {
    * 可選：包含關聯的計算任務數量
    */
   async getById(id: string): Promise<Order | null> {
-    const data = await gql<{ order: ApiOrder | null }>(
+    const data = await gql<{ order: Order | null }>(
       `query GetOrder($id: ID!) {
         order(id: $id) {
           ${FIELDS}
@@ -63,7 +60,7 @@ export const ordersService = {
       throw new Error('至少需要一輛車輛')
     }
 
-    const result = await gql<{ createOrder: ApiOrder }>(
+    const result = await gql<{ createOrder: Order }>(
       `mutation CreateOrder(
         $destination_snapshot: JSON!,
         $vehicle_snapshot: JSON!,

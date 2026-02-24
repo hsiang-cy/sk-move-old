@@ -6,32 +6,32 @@
 
 ## 任務清單
 
-- [ ] 1. 建立專案結構和型別定義
+- [x] 1. 建立專案結構和型別定義
   - 建立 `src/services/orders.ts` 和 `src/services/computes.ts` 檔案
   - 建立 `src/types/order.ts` 和 `src/types/compute.ts` 型別定義檔案
   - 定義 Order、Compute、Route、RouteStop 等介面
   - 定義 ComputeStatus 列舉型別
   - _需求：1.1, 1.2, 2.1, 3.1, 4.1_
 
-- [ ] 2. 實作訂單服務層（Orders Service）
-  - [ ] 2.1 實作 ordersService.getAll() 方法
+- [x] 2. 實作訂單服務層（Orders Service）
+  - [x] 2.1 實作 ordersService.getAll() 方法
     - 撰寫 GraphQL query 取得訂單列表
     - 實作資料轉換邏輯（API 格式轉前端格式）
     - 包含 destination_snapshot 和 vehicle_snapshot 欄位
     - _需求：2.1, 8.2_
 
-  - [ ] 2.2 實作 ordersService.getById() 方法
+  - [x] 2.2 實作 ordersService.getById() 方法
     - 撰寫 GraphQL query 取得單一訂單詳情
     - 包含完整的快照資料和關聯的計算任務數量
     - _需求：2.2_
 
-  - [ ] 2.3 實作 ordersService.create() 方法
+  - [x] 2.3 實作 ordersService.create() 方法
     - 撰寫 GraphQL mutation 建立訂單
     - 接收地點和車輛快照資料作為參數
     - 驗證快照資料完整性（至少 1 個地點和車輛）
     - _需求：1.1, 1.2, 1.3, 1.4, 1.5_
 
-  - [ ] 2.4 實作 ordersService.delete() 方法
+  - [x] 2.4 實作 ordersService.delete() 方法
     - 撰寫 GraphQL mutation 軟刪除訂單
     - 更新訂單狀態為 'deleted'
     - _需求：2.3_
@@ -42,31 +42,31 @@
     - 使用 Mock fetch 模擬 API 回應
     - _需求：1.1, 1.2, 2.1, 2.2, 2.3_
 
-- [ ] 3. 實作計算任務服務層（Computes Service）
-  - [ ] 3.1 實作 computesService.getAll() 方法
+- [x] 3. 實作計算任務服務層（Computes Service）
+  - [x] 3.1 實作 computesService.getAll() 方法
     - 撰寫 GraphQL query 取得計算任務列表
     - 包含關聯的訂單基本資訊
     - 支援按 order_id 篩選
     - _需求：4.1, 8.2_
 
-  - [ ] 3.2 實作 computesService.getById() 方法
+  - [x] 3.2 實作 computesService.getById() 方法
     - 撰寫 GraphQL query 取得單一計算任務詳情
     - 包含完整的路線和停靠點資料（如果已完成）
     - 包含關聯的訂單資訊
     - _需求：4.2, 4.3_
 
-  - [ ] 3.3 實作 computesService.create() 方法
+  - [x] 3.3 實作 computesService.create() 方法
     - 撰寫 GraphQL mutation 建立計算任務
     - 接收 order_id 作為參數
     - 初始狀態設為 'pending'
     - _需求：3.1, 3.2_
 
-  - [ ] 3.4 實作 computesService.cancel() 方法
+  - [x] 3.4 實作 computesService.cancel() 方法
     - 撰寫 GraphQL mutation 取消計算任務
     - 驗證狀態是否允許取消（pending 或 computing）
     - _需求：3.3, 3.4_
 
-  - [ ] 3.5 實作 computesService.getRoutes() 方法
+  - [x] 3.5 實作 computesService.getRoutes() 方法
     - 撰寫 GraphQL query 取得計算任務的所有路線
     - 包含每條路線的停靠點資料
     - 包含關聯的車輛和地點資訊
@@ -78,24 +78,24 @@
     - 測試錯誤處理邏輯
     - _需求：3.1, 3.2, 3.3, 3.4, 4.1, 4.2_
 
-- [ ] 4. 實作訂單 React Hooks
-  - [ ] 4.1 實作 useOrders hook
+- [x] 4. 實作訂單 React Hooks
+  - [x] 4.1 實作 useOrders hook
     - 使用 TanStack Query 的 useQuery
     - 設定 queryKey: ['orders']
     - 設定 staleTime: 30 秒
     - _需求：2.1_
 
-  - [ ] 4.2 實作 useOrder hook
+  - [x] 4.2 實作 useOrder hook
     - 接收 orderId 參數
     - 設定 queryKey: ['order', orderId]
     - _需求：2.2_
 
-  - [ ] 4.3 實作 useCreateOrder hook
+  - [x] 4.3 實作 useCreateOrder hook
     - 使用 TanStack Query 的 useMutation
     - 成功後 invalidate ['orders'] cache
     - _需求：1.3_
 
-  - [ ] 4.4 實作 useDeleteOrder hook
+  - [x] 4.4 實作 useDeleteOrder hook
     - 使用 TanStack Query 的 useMutation
     - 成功後 invalidate ['orders'] cache
     - _需求：2.3_
@@ -106,15 +106,15 @@
     - 測試錯誤處理
     - _需求：1.3, 2.1, 2.2, 2.3_
 
-- [ ] 5. 實作計算任務 React Hooks
-  - [ ] 5.1 實作 useComputes hook
+- [x] 5. 實作計算任務 React Hooks
+  - [x] 5.1 實作 useComputes hook
     - 使用 TanStack Query 的 useQuery
     - 設定 queryKey: ['computes', { orderId }]
     - 支援可選的 orderId 篩選參數
     - 設定 staleTime: 0（需要即時狀態）
     - _需求：4.1_
 
-  - [ ] 5.2 實作 useCompute hook
+  - [x] 5.2 實作 useCompute hook
     - 接收 computeId 參數
     - 設定 queryKey: ['compute', computeId]
     - 實作輪詢邏輯：當狀態為 pending 或 computing 時每 3 秒 refetch
@@ -127,18 +127,18 @@
     - 生成隨機的狀態轉換序列
     - 驗證輪詢在正確的狀態下啟動和停止
 
-  - [ ] 5.4 實作 useCreateCompute hook
+  - [x] 5.4 實作 useCreateCompute hook
     - 使用 TanStack Query 的 useMutation
     - 成功後 invalidate ['computes'] cache
     - _需求：3.1_
 
-  - [ ] 5.5 實作 useCancelCompute hook
+  - [x] 5.5 實作 useCancelCompute hook
     - 使用 TanStack Query 的 useMutation
     - 成功後 invalidate ['compute', computeId] cache
     - 處理取消失敗的錯誤（已完成的任務無法取消）
     - _需求：3.3, 3.4_
 
-  - [ ] 5.6 實作 useComputeRoutes hook
+  - [x] 5.6 實作 useComputeRoutes hook
     - 接收 computeId 參數
     - 設定 queryKey: ['compute', computeId, 'routes']
     - 設定 staleTime: 5 分鐘（完成後不會變動）
@@ -154,8 +154,8 @@
 - [ ] 6. 檢查點 - 確保服務層和 Hook 層測試通過
   - 確保所有測試通過，如有問題請詢問使用者
 
-- [ ] 7. 實作共用 UI 元件
-  - [ ] 7.1 實作 ComputeStatusBadge 元件
+- [x] 7. 實作共用 UI 元件
+  - [x] 7.1 實作 ComputeStatusBadge 元件
     - 接收 status 和 className props
     - 根據狀態顯示不同顏色和文字
     - pending: 灰色「等待中」
@@ -172,7 +172,7 @@
     - 使用 @testing-library/react
     - _需求：4.1_
 
-- [ ] 8. 實作訂單管理頁面
+- [-] 8. 實作訂單管理頁面
   - [ ] 8.1 建立 OrdersView 元件
     - 建立 `src/routes/_auth.orders.tsx` 路由檔案
     - 建立 `src/views/OrdersView.tsx` 元件檔案
@@ -184,7 +184,7 @@
     - 提供「前往計算」連結
     - _需求：2.1, 2.3_
 
-  - [ ] 8.2 實作 OrderFormModal 元件
+  - [x] 8.2 實作 OrderFormModal 元件
     - 建立 `src/components/orders/OrderFormModal.tsx`
     - 接收 open 和 onClose props
     - 使用 useLocations 和 useVehicles hooks 取得當前資料
@@ -196,7 +196,7 @@
     - 成功後關閉 modal 並顯示成功訊息
     - _需求：1.1, 1.2, 1.3, 1.4, 1.5, 10.1_
 
-  - [ ] 8.3 實作 OrderDetailModal 元件
+  - [x] 8.3 實作 OrderDetailModal 元件
     - 建立 `src/components/orders/OrderDetailModal.tsx`
     - 接收 open、order 和 onClose props
     - 顯示訂單基本資訊（ID、建立時間、狀態、備註）

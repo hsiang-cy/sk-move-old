@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from vrp.schema import VRPRequest
+from vrp.models.schema import VRPRequest
 
 router = APIRouter(prefix="/vrp", tags=["VRP"])
 

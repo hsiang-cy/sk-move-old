@@ -1,8 +1,8 @@
 import uvicorn
 import asyncio
 from fastapi import FastAPI
-from vrp.router import router as vrp_router
-from vrp.solver import solve_vrp_logic
+from vrp.api.router import router as vrp_router
+from vrp.solvers.ortools import solve_vrp_logic
 
 # ── 1. 建立一個模擬 Modal 行為的代理類別 ──
 # 因為 router.py 呼叫了 solve_vrp.spawn.aio(compute_id, request)

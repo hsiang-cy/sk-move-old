@@ -9,16 +9,16 @@ import { computeResolvers, computeTypeDefs } from './resolvers/compute'
 
 function parseLiteral(ast: any): any {
   switch (ast.kind) {
-    case Kind.STRING:  return ast.value
+    case Kind.STRING: return ast.value
     case Kind.BOOLEAN: return ast.value
-    case Kind.INT:     return parseInt(ast.value, 10)
-    case Kind.FLOAT:   return parseFloat(ast.value)
-    case Kind.NULL:    return null
-    case Kind.LIST:    return ast.values.map(parseLiteral)
-    case Kind.OBJECT:  return Object.fromEntries(
+    case Kind.INT: return parseInt(ast.value, 10)
+    case Kind.FLOAT: return parseFloat(ast.value)
+    case Kind.NULL: return null
+    case Kind.LIST: return ast.values.map(parseLiteral)
+    case Kind.OBJECT: return Object.fromEntries(
       ast.fields.map((f: any) => [f.name.value, parseLiteral(f.value)])
     )
-    default:           return null
+    default: return null
   }
 }
 

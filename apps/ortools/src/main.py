@@ -19,14 +19,14 @@ app = modal.App("ortools-vrp-solver", image=image)
 # 距離與時間矩陣的大小是按 N^2 增長，記憶體不足會導致 OOM (Out of Memory) 崩潰。
 @app.function(cpu=1.0, memory=2048)
 def solve_vrp(compute_id: int, data):
-    from vrp.solver import solve_vrp_logic
+    from vrp.solvers.ortools import solve_vrp_logic
     return solve_vrp_logic(compute_id, data)
 
 # ── 3. FastAPI 應用程式 ──
 @app.function()
 @modal.asgi_app()
 def api():
-    from vrp.router import router as vrp_router
+    from vrp.api.router import router as vrp_router
     web_app = FastAPI()
     web_app.state.solve_vrp = solve_vrp  # 直接傳入 function reference，不用 from_name
     web_app.include_router(vrp_router)

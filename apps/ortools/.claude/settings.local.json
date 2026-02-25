@@ -6,7 +6,8 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(jobs:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

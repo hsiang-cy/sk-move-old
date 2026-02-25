@@ -22,12 +22,21 @@ def solve_vrp(compute_id: int, data):
     from vrp.solvers.ortools import solve_vrp_logic
     return solve_vrp_logic(compute_id, data)
 
+
+@app.function(cpu=1.0, memory=2048)
+def solve_vrp_v2(compute_id: int, data):
+    from vrp.solvers.ortools_v2 import solve_vrp_v2_logic
+    return solve_vrp_v2_logic(compute_id, data)
+
 # ── 3. FastAPI 應用程式 ──
 @app.function()
 @modal.asgi_app()
 def api():
     from vrp.api.router import router as vrp_router
+    from vrp.api.router_v2 import router_v2
     web_app = FastAPI()
-    web_app.state.solve_vrp = solve_vrp  # 直接傳入 function reference，不用 from_name
+    web_app.state.solve_vrp = solve_vrp
+    web_app.state.solve_vrp_v2 = solve_vrp_v2
     web_app.include_router(vrp_router)
+    web_app.include_router(router_v2)
     return web_app

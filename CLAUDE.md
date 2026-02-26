@@ -30,19 +30,36 @@ pnpm cf-typegen   # Regenerate CloudflareBindings types
 > For `pnpm generate` and `pnpm migrate`, the comment in `drizzle.config.ts` notes that in a monorepo the commands must be run from within the `apps/api/` directory.
 
 ### Local environment
-Copy `.env` and set `DATABASE_URL` (Neon connection string) and `JWT_SECRET`. Wrangler reads `.dev.vars` (not `.env`) for secrets locally.
+Copy `.env` and set the following in `.dev.vars` (Wrangler reads `.dev.vars`, not `.env`, for secrets locally):
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Neon connection string |
+| `JWT_SECRET` | JWT signing secret |
+| `ORTOOLS_URL` | OR-Tools service base URL |
+| `API_BASE_URL` | This API's own public URL (used to construct `webhook_url`) |
+| `GOOGLE_ROUTES_API_KEY` | Google Routes API key |
+| `ORTOOLS_WEBHOOK_SECRET` | *(Optional)* Shared secret validated via `X-Webhook-Secret` header |
 
 ### Architecture
 - `src/index.ts` — Hono entry point; mounts GraphQL Yoga at `/graphql`, performs startup env-var checks.
 - `src/graphql/schema.ts` — Merges all `typeDefs` and `resolvers`; defines `JSON` scalar.
 - `src/graphql/context.ts` — `Context` type (`db`, `user`, `env`); `requireAuth(user, minRole)` helper (role order: `just_view < guest < normal < manager < admin`).
 - `src/graphql/resolvers/` — One file per domain: `account`, `destination`, `vehicle`, `order`, `compute`.
-- `src/db/schema.ts` — Single source of truth for all tables (Drizzle). Key entities: `account`, `destination`, `custom_vehicle_type`, `vehicle`, `order`, `compute`, `route`, `route_stop`, `point_log`, `info_between_two_point`.
+- `src/db/schema.ts` — Single source of truth for all tables (Drizzle). Key entities: `account`, `token`, `destination`, `custom_vehicle_type`, `vehicle`, `order`, `compute`, `route`, `route_stop`, `point_log`, `info_between_two_point`.
 - `src/db/connect.ts` — Creates Drizzle instance with Neon HTTP client.
+- `src/routes/webhook.ts` — Hono router for `POST /internal/vrp-callback`; receives OR-Tools async results, validates optional `X-Webhook-Secret`, writes `route`/`route_stop` rows and updates `compute_status`.
 
 ### Adding a new GraphQL domain
 1. Create `src/graphql/resolvers/<name>.ts` exporting `<name>TypeDefs` and `<name>Resolvers`.
 2. Import and register both in `src/graphql/schema.ts` (add to `typeDefs` array and `mergeResolvers` call).
+
+### JSONB `data` field conventions
+`destination.data` stores VRP-relevant fields: `is_depot` (bool), `time_window` (array of `{start, end}` in minutes), `operation_time` (minutes), `demand` (integer), `priority` (integer).
+
+`compute.data` stores solver policy: `time_limit_seconds`, `fixed_vehicle_cost`, `first_solution_strategy`.
+
+`vehicle.data` stores `max_distance` (metres, 0 = unlimited), `max_working_time` (minutes, 0 = unlimited).
 
 ### Optimization flow
 1. User creates `destination` and `vehicle` records.
@@ -72,10 +89,11 @@ pnpm preview  # Preview production build
 - `src/routeTree.gen.ts` — **Auto-generated** by the Vite plugin; never edit manually.
 - `src/services/api.ts` — Core `gql<T>(query, variables)` fetch helper; handles `Authorization: Bearer` header from `localStorage`, redirects to `/login` on 401/Unauthorized.
 - `src/stores/auth.ts` — Zustand store; persists JWT token in `localStorage`.
-- `src/hooks/` — TanStack Query hooks per domain (`useLocations`, `useVehicles`, `useVehicleTypes`).
+- `src/hooks/` — TanStack Query hooks per domain (`useLocations`, `useVehicles`, `useVehicleTypes`, `useOrders`, `useComputes`).
 - `src/services/` — GraphQL query/mutation definitions per domain.
 - `src/components/` — UI components organized by domain and layout.
 - `src/views/` — Page-level components rendered by routes.
+- `src/lib/utils.ts` — Shared utilities; notably `formatTimestamp(ts, options?)` for Unix timestamp → `zh-TW` locale string.
 - Path alias `@/` maps to `src/`.
 
 ### Adding a new route

@@ -5,7 +5,8 @@
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(cd \"C:\\\\Users\\\\sean2\\\\Desktop\\\\side\\\\sk-move\\\\apps\\\\web\" && pnpm build 2>&1)"
+      "Bash(cd \"C:\\\\Users\\\\sean2\\\\Desktop\\\\side\\\\sk-move\\\\apps\\\\web\" && pnpm build 2>&1)",
+      "Bash(git log:*)"
     ]
   }
 }

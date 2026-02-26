@@ -28,7 +28,7 @@ export const accountRoleEnum = pgEnum('account_role', ['admin', 'manager', 'norm
 
 // 使用者
 export const account = pgTable('account', {
-    account_id: serial('id').primaryKey(),
+    account_id: serial('account_id').primaryKey(),
     status: statusEnum('status').notNull().default('active'),
     account_role: accountRoleEnum('account_role').notNull().default('normal'), // 權限，預設為 normal
 
@@ -49,7 +49,7 @@ export const account = pgTable('account', {
     data: jsonb('data'),
 }, (table) => ([
     index().on(table.account),
-    index("account_account_gin").using('gin', sql`to_tsvector('english', ${table.account})`)
+    // index("account_account_gin").using('gin', sql`to_tsvector('english', ${table.account})`)
 ]))
 
 // 點數紀錄
@@ -65,6 +65,18 @@ export const point_log = pgTable('point_log', {
 }, (table) => ([
     index().on(table.account_id),
 ]))
+
+// api 版本的 token
+export const token = pgTable('token', {
+    id: serial('id').primaryKey(),
+    account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
+
+    token: text('text').notNull(),
+
+    created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
+    updated_at: bigint('updated_at', { mode: 'number' }),
+    data: jsonb('data'),    // comment 放這
+})
 
 // 地點
 export const destination = pgTable('destination', {
@@ -150,7 +162,7 @@ export const order = pgTable('order', {
     id: serial('id').primaryKey(),
     status: statusEnum('status').notNull().default('active'), // inactive, active, deleted
 
-    algorithm:text('algorithm').notNull(),
+    algorithm: text('algorithm').notNull().default('未設定'),
 
     data: jsonb('data'),
     /*
@@ -239,7 +251,7 @@ export const route_stop = pgTable('route_stop', {
 
 export const info_between_two_point = pgTable('point_distance', {
     id: serial('id').primaryKey(),
-    
+
     a_point: integer('a_point').references(() => destination.id).notNull(), // 參考 destination 表的 id
     b_point: integer('b_point').references(() => destination.id).notNull(),
 

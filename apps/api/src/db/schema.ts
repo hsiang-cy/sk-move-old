@@ -70,8 +70,9 @@ export const point_log = pgTable('point_log', {
 export const token = pgTable('token', {
     id: serial('id').primaryKey(),
     account_id: integer('account_id').notNull().references(() => account.account_id, { onDelete: 'cascade' }),
+    status: statusEnum('status').notNull().default('active'),
 
-    token: text('text').notNull(),
+    token: text('text').notNull().unique(),
 
     created_at: bigint('created_at', { mode: 'number' }).default(sql`EXTRACT(EPOCH FROM NOW())::bigint`),
     updated_at: bigint('updated_at', { mode: 'number' }),

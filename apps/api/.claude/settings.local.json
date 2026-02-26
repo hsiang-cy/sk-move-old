@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(__NEW_LINE_697dd21de7260bb7__ echo:*)",
+      "Bash(pnpm generate:*)",
+      "Bash(__NEW_LINE_f2b78082501f3c11__ echo:*)",
+      "Bash(__NEW_LINE_f97adbfc5209ceca__ echo:*)"
     ]
   }
 }

@@ -29,6 +29,13 @@
       "when": 1772115349709,
       "tag": "0003_burly_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772116907576,
+      "tag": "0004_bouncy_jack_power",
+      "breakpoints": true
     }
   ]
 }

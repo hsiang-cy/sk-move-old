@@ -258,8 +258,8 @@ export const info_between_two_point = pgTable('point_distance', {
     distance_from_a_to_b: text('distance_from_a_b').notNull(),   // 公尺
     time_from_a_to_b: text('time_from_a_b').notNull(),           // 分鐘
 
-    distance_from_a_to_b_dynamic: text('distance_from_a_b'),   // 公尺
-    time_from_a_to_b_dynamic: text('time_from_a_b'),           // 分鐘
+    distance_from_a_to_b_dynamic: text('distance_from_a_b_dynamic'),   // 公尺
+    time_from_a_to_b_dynamic: text('time_from_a_b_dynamic'),           // 分鐘
 
     polyline_from_map_service: text('polyline_from_map_service'), // 從地圖服務取得的路線 polyline 編碼
     polyline_real: text('polyline_real'), // 真實路線的 polyline 編碼，可能會因為交通狀況等因素與預估路線不同

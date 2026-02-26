@@ -9,10 +9,12 @@ export type Context = {
     JWT_SECRET: string
     ORTOOLS_URL: string
     API_BASE_URL: string
+    GOOGLE_ROUTES_API_KEY: string
   }
 }
 
 const ROLE_ORDER = ['just_view', 'guest', 'normal', 'manager', 'admin']
+
 
 export function requireAuth(user: Context['user'], minRole = 'just_view'): void {
   if (!user) throw new Error('Unauthorized')

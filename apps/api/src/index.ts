@@ -11,6 +11,7 @@ type Bindings = {
   ORTOOLS_URL: string
   API_BASE_URL: string
   ORTOOLS_WEBHOOK_SECRET?: string
+  GOOGLE_ROUTES_API_KEY: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -22,7 +23,7 @@ function performStartupChecks(env: Bindings) {
   if (isStartupChecked) return
 
   // 1. 檢查必要的環境變數是否定義 (純記憶體操作，極快)
-  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'ORTOOLS_URL', 'API_BASE_URL'] as const
+  const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'ORTOOLS_URL', 'API_BASE_URL', 'GOOGLE_ROUTES_API_KEY'] as const
   for (const key of requiredEnvVars) {
     if (!env[key]) {
       console.error(`[Startup Error] Missing environment variable: ${key}`)

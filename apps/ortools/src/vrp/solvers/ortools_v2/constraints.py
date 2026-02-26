@@ -110,6 +110,31 @@ def add_optional_stops(routing, manager, data: VRPRequestV2):
             routing.AddDisjunction([index], loc.unserved_penalty)
 
 
+def add_vehicle_constraints(routing, manager, data: VRPRequestV2):
+    """
+    Restrict which vehicles may visit a location.
+
+    Uses routing.solver().Add(VehicleVar != v_idx) rather than RemoveValue(),
+    because RemoveValue() can be silently bypassed when combined with
+    AddDisjunction / soft time windows / max_duration in the same model.
+    solver().Add() goes through the CP propagation engine and is always enforced.
+    """
+    id_to_idx = {v.id: idx for idx, v in enumerate(data.vehicles)}
+    all_vehicle_indices = set(range(len(data.vehicles)))
+    solver = routing.solver()
+
+    for location_idx, loc in enumerate(data.locations):
+        if loc.allowed_vehicle_ids is None:
+            continue
+        allowed_indices = {id_to_idx[vid] for vid in loc.allowed_vehicle_ids if vid in id_to_idx}
+        forbidden_indices = all_vehicle_indices - allowed_indices
+        if not forbidden_indices:
+            continue
+        node_index = manager.NodeToIndex(location_idx)
+        for v_idx in forbidden_indices:
+            solver.Add(routing.VehicleVar(node_index) != v_idx)
+
+
 def add_max_duration(routing, data: VRPRequestV2, time_dimension):
     """
     Cap each vehicle's route duration via CumulVar(End(v)).SetMax().

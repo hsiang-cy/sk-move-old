@@ -1,3 +1,4 @@
+import time
 import httpx
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
@@ -10,11 +11,13 @@ from vrp.solvers.ortools_v2.constraints import (
     add_time_dimension_v2,
     add_optional_stops,
     add_max_duration,
+    add_vehicle_constraints,
 )
 from vrp.solvers.ortools_v2.result import parse_solution
 
 
 def solve_vrp_v2_logic(compute_id: int, data: VRPRequestV2):
+    start_time = time.perf_counter()
     try:
         manager = pywrapcp.RoutingIndexManager(
             len(data.locations), len(data.vehicles), data.depot_index
@@ -29,6 +32,7 @@ def solve_vrp_v2_logic(compute_id: int, data: VRPRequestV2):
         # v2 features
         add_optional_stops(routing, manager, data)
         add_max_duration(routing, data, time_dimension)
+        add_vehicle_constraints(routing, manager, data)
 
         search_params = pywrapcp.DefaultRoutingSearchParameters()
         search_params.first_solution_strategy = (
@@ -45,11 +49,14 @@ def solve_vrp_v2_logic(compute_id: int, data: VRPRequestV2):
             raise ValueError("找不到可行解，請確認時間窗與容量限制是否過於嚴苛")
 
         result = parse_solution(routing, manager, solution, time_dimension, data)
-        payload = {"compute_id": compute_id, **result}
+        elapsed = round(time.perf_counter() - start_time, 3)
+        payload = {"compute_id": compute_id, "elapsed_seconds": elapsed, **result}
 
     except Exception as e:
+        elapsed = round(time.perf_counter() - start_time, 3)
         payload = {
             "compute_id": compute_id,
+            "elapsed_seconds": elapsed,
             "status": "error",
             "message": str(e),
         }
